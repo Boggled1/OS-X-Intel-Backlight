@@ -17,10 +17,10 @@ jobs:
 
       - name: Setup Xcode
         run: |
-          sudo xcode-select --switch /Applications/Xcode_16.4.app/Contents/Developer || true
+          sudo xcode-select --switch /Applications/Xcode_15.4.app/Contents/Developer || true
           sudo xcode-select --reset || true
-          xcode-select --install 2>/dev/null || true
-
+          xcodebuild -version
+          
       - name: Clone Lilu
         run: |
           git clone --depth 1 https://github.com/acidanthera/Lilu.git Lilu
@@ -29,11 +29,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/logs
-          echo "xcodebuild: building Lilu (using xcrun to locate SDK)"
+          echo "xcodebuild: building Lilu (locating SDK via xcrun)"
           SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
           echo "Using SDK: $SDK_PATH"
           xcodebuild -project Lilu/Lilu.xcodeproj -scheme Lilu -configuration Release \
-            -sdk "$SDK_PATH" \
+            -sdk macosx \
+            SDKROOT="$SDK_PATH" \
             MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
             -derivedDataPath build \
