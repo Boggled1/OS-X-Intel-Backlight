@@ -32,11 +32,12 @@ jobs:
           echo "xcodebuild: building Lilu (locating SDK via xcrun)"
           SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
           echo "Using SDK: $SDK_PATH"
+          export SDKROOT="$SDK_PATH"
           xcodebuild -project Lilu/Lilu.xcodeproj -scheme Lilu -configuration Release \
             -sdk macosx \
-            SDKROOT="$SDK_PATH" \
             MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
+            HEADER_SEARCH_PATHS="$SDKROOT/usr/include" \
             -derivedDataPath build \
             | tee build/logs/lilu-xcode.log
 
@@ -57,11 +58,12 @@ jobs:
           echo "xcodebuild: building AppleBacklightFixup (locating SDK via xcrun)"
           SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
           echo "Using SDK: $SDK_PATH"
+          export SDKROOT="$SDK_PATH"
           xcodebuild -project AppleBacklightFixup/AppleBacklightFixup.xcodeproj -scheme AppleBacklightFixup -configuration Release \
             -sdk macosx \
-            SDKROOT="$SDK_PATH" \
             MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
+            HEADER_SEARCH_PATHS="$SDKROOT/usr/include" \
             -derivedDataPath build \
             | tee build/logs/applebacklightfixup-xcode.log
 
