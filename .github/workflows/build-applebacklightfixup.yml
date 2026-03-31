@@ -14,6 +14,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Xcode
+        run: |
+          sudo xcode-select --switch /Applications/Xcode_16.4.app/Contents/Developer || true
+          sudo xcode-select --reset || true
+          xcode-select --install 2>/dev/null || true
+
       - name: Clone Lilu
         run: |
           git clone --depth 1 https://github.com/acidanthera/Lilu.git Lilu
