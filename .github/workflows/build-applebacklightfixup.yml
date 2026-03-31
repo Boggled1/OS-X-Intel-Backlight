@@ -29,9 +29,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/logs
-          echo "xcodebuild: building Lilu"
+          echo "xcodebuild: building Lilu (using xcrun to locate SDK)"
+          SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
+          echo "Using SDK: $SDK_PATH"
           xcodebuild -project Lilu/Lilu.xcodeproj -scheme Lilu -configuration Release \
-            -sdk macosx \
+            -sdk "$SDK_PATH" \
             MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
             -derivedDataPath build \
