@@ -54,9 +54,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/logs
-          echo "xcodebuild: building AppleBacklightFixup"
+          echo "xcodebuild: building AppleBacklightFixup (locating SDK via xcrun)"
+          SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
+          echo "Using SDK: $SDK_PATH"
           xcodebuild -project AppleBacklightFixup/AppleBacklightFixup.xcodeproj -scheme AppleBacklightFixup -configuration Release \
             -sdk macosx \
+            SDKROOT="$SDK_PATH" \
             MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
             -derivedDataPath build \
