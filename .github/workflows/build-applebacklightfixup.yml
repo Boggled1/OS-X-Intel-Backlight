@@ -27,13 +27,12 @@ jobs:
       - name: Build Lilu
         run: |
           set -euo pipefail
-          SDKPATH=$(xcrun --sdk macosx --show-sdk-path)
-          echo "Using SDK: $SDKPATH"
           mkdir -p build/logs
+          echo "xcodebuild: building Lilu"
           xcodebuild -project Lilu/Lilu.xcodeproj -scheme Lilu -configuration Release \
-            -sdk macosx SDKROOT="$SDKPATH" MACOSX_DEPLOYMENT_TARGET=10.13 \
+            -sdk macosx \
+            MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
-            OTHER_CFLAGS="-isysroot $SDKPATH" OTHER_CPLUSPLUSFLAGS="-isysroot $SDKPATH" \
             -derivedDataPath build \
             | tee build/logs/lilu-xcode.log
 
@@ -50,13 +49,12 @@ jobs:
       - name: Build AppleBacklightFixup
         run: |
           set -euo pipefail
-          SDKPATH=$(xcrun --sdk macosx --show-sdk-path)
-          echo "Using SDK: $SDKPATH"
           mkdir -p build/logs
+          echo "xcodebuild: building AppleBacklightFixup"
           xcodebuild -project AppleBacklightFixup/AppleBacklightFixup.xcodeproj -scheme AppleBacklightFixup -configuration Release \
-            -sdk macosx SDKROOT="$SDKPATH" MACOSX_DEPLOYMENT_TARGET=10.13 \
+            -sdk macosx \
+            MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
-            OTHER_CFLAGS="-isysroot $SDKPATH" OTHER_CPLUSPLUSFLAGS="-isysroot $SDKPATH" \
             -derivedDataPath build \
             | tee build/logs/applebacklightfixup-xcode.log
 
