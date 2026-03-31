@@ -33,11 +33,14 @@ jobs:
           SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
           echo "Using SDK: $SDK_PATH"
           export SDKROOT="$SDK_PATH"
+          # ensure compiler uses the SDK and kernel framework headers
           xcodebuild -project Lilu/Lilu.xcodeproj -scheme Lilu -configuration Release \
             -sdk macosx \
+            SDKROOT="$SDKROOT" \
             MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
-            HEADER_SEARCH_PATHS="$SDKROOT/usr/include" \
+            HEADER_SEARCH_PATHS="$SDKROOT/usr/include $SDKROOT/System/Library/Frameworks/Kernel.framework/Headers" \
+            OTHER_CFLAGS="-isysroot $SDKROOT -I$SDKROOT/usr/include -I$SDKROOT/System/Library/Frameworks/Kernel.framework/Headers" \
             -derivedDataPath build \
             | tee build/logs/lilu-xcode.log
 
@@ -61,9 +64,11 @@ jobs:
           export SDKROOT="$SDK_PATH"
           xcodebuild -project AppleBacklightFixup/AppleBacklightFixup.xcodeproj -scheme AppleBacklightFixup -configuration Release \
             -sdk macosx \
+            SDKROOT="$SDKROOT" \
             MACOSX_DEPLOYMENT_TARGET=10.13 \
             CODE_SIGNING_ALLOWED=NO \
-            HEADER_SEARCH_PATHS="$SDKROOT/usr/include" \
+            HEADER_SEARCH_PATHS="$SDKROOT/usr/include $SDKROOT/System/Library/Frameworks/Kernel.framework/Headers" \
+            OTHER_CFLAGS="-isysroot $SDKROOT -I$SDKROOT/usr/include -I$SDKROOT/System/Library/Frameworks/Kernel.framework/Headers" \
             -derivedDataPath build \
             | tee build/logs/applebacklightfixup-xcode.log
 
