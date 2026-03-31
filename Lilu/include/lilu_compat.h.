@@ -1,0 +1,27 @@
+#pragma once
+
+/* Prefer standard libc headers first */
+#include <string.h>
+#include <strings.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+/* Undef conflicting bit-scan symbols introduced by libc if present */
+#ifdef ffs
+#undef ffs
+#endif
+#ifdef ffsll
+#undef ffsll
+#endif
+#ifdef fls
+#undef fls
+#endif
+#ifdef flsll
+#undef flsll
+#endif
+
+/* Guarded inclusion of kernel headers */
+#ifndef _LIBKERN_LIBKERN_H_
+#define _LIBKERN_LIBKERN_H_
+#include <libkern/libkern.h>
+#endif
