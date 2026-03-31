@@ -20,20 +20,39 @@ jobs:
 
       - name: Build Lilu
         run: |
-          cd Lilu
-          xcodebuild -project Lilu.xcodeproj -configuration Release -alltargets || xcodebuild -project Lilu.xcodeproj -configuration Release -alltargets CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
-          find . -type d -name "Lilu.kext" -print
+          set -euo pipefail
+          SDKPATH=$(xcrun --sdk macosx --show-sdk-path)
+          echo "Using SDK: $SDKPATH"
+          mkdir -p build/logs
+          xcodebuild -project Lilu/Lilu.xcodeproj -scheme Lilu -configuration Release \
+            SDKROOT="$SDKPATH" MACOSX_DEPLOYMENT_TARGET=10.13 \
+            CODE_SIGNING_ALLOWED=NO -derivedDataPath build \
+            | tee build/logs/lilu-xcode.log
+
+      - name: Upload Lilu logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: lilu-logs
+          path: build/logs/lilu-xcode.log
+
+      - name: Clone AppleBacklightFixup
+        run: |
+          git clone --depth 1 https://github.com/acidanthera/AppleBacklightFixup.git AppleBacklightFixup
 
       - name: Build AppleBacklightFixup
         run: |
-          cd ${{ github.workspace }}
-          xcodebuild -project AppleBacklightFixup.xcodeproj -configuration Release -alltargets || xcodebuild -project AppleBacklightFixup.xcodeproj -configuration Release -alltargets CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
-          find . -type d -name "AppleBacklightFixup.kext" -print
+          set -euo pipefail
+          SDKPATH=$(xcrun --sdk macosx --show-sdk-path)
+          echo "Using SDK: $SDKPATH"
+          mkdir -p build/logs
+          xcodebuild -project AppleBacklightFixup/AppleBacklightFixup.xcodeproj -scheme AppleBacklightFixup -configuration Release \
+            SDKROOT="$SDKPATH" MACOSX_DEPLOYMENT_TARGET=10.13 \
+            CODE_SIGNING_ALLOWED=NO -derivedDataPath build \
+            | tee build/logs/applebacklightfixup-xcode.log
 
-      - name: Upload built kexts
+      - name: Upload AppleBacklightFixup logs
         uses: actions/upload-artifact@v4
         with:
-          name: built-kexts
-          path: |
-            Lilu/build/Release/Lilu.kext
-            build/Release/AppleBacklightFixup.kext
+          name: applebacklightfixup-logs
+          path: build/logs/applebacklightfixup-xcode.log
+
