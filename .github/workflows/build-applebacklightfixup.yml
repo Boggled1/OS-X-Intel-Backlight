@@ -1,0 +1,39 @@
+# Paste the workflow YAML here exactly as you want it.
+# Example:
+name: Build AppleBacklightFixup and Lilu
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone Lilu
+        run: |
+          git clone --depth 1 https://github.com/acidanthera/Lilu.git Lilu
+
+      - name: Build Lilu
+        run: |
+          cd Lilu
+          xcodebuild -project Lilu.xcodeproj -configuration Release -alltargets || xcodebuild -project Lilu.xcodeproj -configuration Release -alltargets CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+          find . -type d -name "Lilu.kext" -print
+
+      - name: Build AppleBacklightFixup
+        run: |
+          cd ${{ github.workspace }}
+          xcodebuild -project AppleBacklightFixup.xcodeproj -configuration Release -alltargets || xcodebuild -project AppleBacklightFixup.xcodeproj -configuration Release -alltargets CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+          find . -type d -name "AppleBacklightFixup.kext" -print
+
+      - name: Upload built kexts
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-kexts
+          path: |
+            Lilu/build/Release/Lilu.kext
+            build/Release/AppleBacklightFixup.kext
