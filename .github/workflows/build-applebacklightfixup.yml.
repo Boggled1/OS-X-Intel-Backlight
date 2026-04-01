@@ -1,0 +1,122 @@
+name: Build AppleBacklightFixup and Lilu
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Lilu
+        uses: actions/checkout@v4
+        with:
+          repository: acidanthera/Lilu
+          path: Lilu
+          fetch-depth: 0
+
+      - name: Prepare Lilu bootstrap
+        working-directory: Lilu
+        run: |
+          chmod +x Scripts/bootstrap.sh || true
+          ./Scripts/bootstrap.sh || true
+
+      - name: Build Lilu
+        working-directory: Lilu
+        run: |
+          set -euo pipefail
+          mkdir -p build/logs
+          SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
+          echo "Using SDK: $SDK_PATH"
+          xcodebuild -project Lilu.xcodeproj -scheme Lilu -configuration Release \
+            -sdk macosx \
+            SDKROOT="$SDK_PATH" \
+            MACOSX_DEPLOYMENT_TARGET=10.13 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            -derivedDataPath build \
+            | tee build/logs/lilu-xcode.log
+
+      - name: Upload Lilu logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: lilu-logs
+          path: Lilu/build/logs/lilu-xcode.log
+
+      - name: Copy built Lilu.kext into workspace
+        run: |
+          mkdir -p workspace_kexts
+          if [ -d "Lilu/build/Release/Lilu.kext" ]; then
+            cp -R Lilu/build/Release/Lilu.kext workspace_kexts/Lilu.kext
+          elif [ -d "Lilu/build/Build/Products/Release/Lilu.kext" ]; then
+            cp -R Lilu/build/Build/Products/Release/Lilu.kext workspace_kexts/Lilu.kext
+          else
+            # try common derivedData location
+            FOUND=$(find ~/Library/Developer/Xcode/DerivedData -type d -name "Lilu-*" -prune -print -exec find {} -path "*/Build/Products/Release/Lilu.kext" -print \; | head -n 1 || true)
+            if [ -n "$FOUND" ]; then
+              cp -R "$FOUND" workspace_kexts/Lilu.kext
+            else
+              echo "Lilu.kext not found after build" && exit 1
+            fi
+          fi
+          ls -l workspace_kexts
+
+      - name: Checkout AppleBacklightFixup source
+        uses: actions/checkout@v4
+        with:
+          repository: RehabMan/AppleBacklightFixup
+          path: AppleBacklightFixup
+          fetch-depth: 0
+
+      - name: Copy Lilu.kext into AppleBacklightFixup folder
+        run: |
+          cp -R workspace_kexts/Lilu.kext AppleBacklightFixup/Lilu.kext || true
+          ls -l AppleBacklightFixup
+
+      - name: Build AppleBacklightFixup
+        working-directory: AppleBacklightFixup
+        run: |
+          set -euo pipefail
+          mkdir -p build/logs
+          SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
+          echo "Using SDK: $SDK_PATH"
+          xcodebuild -project AppleBacklightFixup.xcodeproj -scheme AppleBacklightFixup -configuration Release \
+            -sdk macosx \
+            SDKROOT="$SDK_PATH" \
+            MACOSX_DEPLOYMENT_TARGET=10.13 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            -derivedDataPath build \
+            | tee build/logs/applebacklightfixup-xcode.log
+
+      - name: Upload AppleBacklightFixup logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: applebacklightfixup-logs
+          path: AppleBacklightFixup/build/logs/applebacklightfixup-xcode.log
+
+      - name: Collect built AppleBacklightFixup.kext
+        working-directory: AppleBacklightFixup
+        run: |
+          mkdir -p build_output
+          # try common derivedData path
+          KEXT_PATH=$(find ~/Library/Developer/Xcode/DerivedData -type d -name "*AppleBacklightFixup*" -exec find {} -path "*/Build/Products/Release/AppleBacklightFixup.kext" -print \; | head -n 1 || true)
+          if [ -z "$KEXT_PATH" ] && [ -d "build/Release/AppleBacklightFixup.kext" ]; then
+            KEXT_PATH="$(pwd)/build/Release/AppleBacklightFixup.kext"
+          fi
+          if [ -n "$KEXT_PATH" ] && [ -d "$KEXT_PATH" ]; then
+            cp -R "$KEXT_PATH" build_output/AppleBacklightFixup.kext
+          else
+            echo "AppleBacklightFixup.kext not found at $KEXT_PATH" && ls -R . && exit 1
+          fi
+          ls -l build_output
+
+      - name: Upload built kext artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppleBacklightFixup-kext
+          path: AppleBacklightFixup/build_output/AppleBacklightFixup.kext
